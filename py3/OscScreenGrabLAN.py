@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-from telnetlib_receive_all import Telnet
+#from telnetlib_receive_all import Telnet
+from telnetlib import Telnet
 from Rigol_functions import *
 import time
-from PIL import Image
+#from PIL import Image
 import io
 import sys
 import os
@@ -15,34 +16,7 @@ __version__ = 'v1.1.0'
 # Added possibility to manually allow run for scopes other then DS1000Z
 __author__ = 'RoGeorge'
 
-#
-# TODO: Write all SCPI commands in their short name, with capitals
-# TODO: Add ignore instrument model switch instead of asking
-#
-# TODO: Detect if the scope is in RUN or in STOP mode (looking at the length of data extracted)
-# TODO: Add logic for 1200/mdep points to avoid displaying the 'Invalid Input!' message
-# TODO: Add message for csv data points: mdep (all) or 1200 (screen), depending on RUN/STOP state, MATH and WAV:MODE
-# TODO: Add STOP scope switch
-#
-# TODO: Add debug switch
-# TODO: Clarify info, warning, error, debug and print messages
-#
-# TODO: Add automated version increase
-#
-# TODO: Extract all memory datapoints. For the moment, CSV is limited to the displayed 1200 datapoints.
-# TODO: Use arrays instead of strings and lists for csv mode.
-#
-# TODO: variables/functions name refactoring
-# TODO: Fine tune maximum chunk size request
-# TODO: Investigate scaling. Sometimes 3.0e-008 instead of expected 3.0e-000
-# TODO: Add timestamp and mark the trigger point as t0
-# TODO: Use channels label instead of chan1, chan2, chan3, chan4, math
-# TODO: Add command line parameters file path
-# TODO: Speed-up the transfer, try to replace Telnet with direct TCP
-# TODO: Add GUI
-# TODO: Add browse and custom filename selection
-# TODO: Create executable distributions
-#
+
 
 # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 logging.basicConfig(level=logging.INFO,
@@ -57,7 +31,7 @@ log_running_python_versions()
 # Update the next lines for your own default settings:
 path_to_save = "captures/"
 save_format = "PNG"
-IP_DS1104Z = "192.168.1.3"
+IP_DS1104Z = "192.254.212.61"
 
 # Rigol/LXI specific constants
 port = 5555
@@ -138,6 +112,11 @@ if instrument_id == "command error":
 
 # Check if instrument is indeed a Rigol DS1000Z series
 id_fields = instrument_id.split(",")
+
+
+
+
+
 if (id_fields[company] != "RIGOL TECHNOLOGIES") or \
         (id_fields[model][:3] != "DS1") or (id_fields[model][-1] != "Z"):
     print("Found instrument model", "'" + id_fields[model] + "'", "from", "'" + id_fields[company] + "'")
@@ -157,14 +136,14 @@ filename = path_to_save + id_fields[model] + "_" + id_fields[serial] + "_" + tim
 if file_format in ["png", "bmp"]:
     # Ask for an oscilloscope display print screen
     print("Receiving screen capture...")
-    buff = command(tn, ":DISP:DATA?")
+    buff = command(tn, "DISP:DATA?")
 
     expectedBuffLen = expected_buff_bytes(buff)
     # Just in case the transfer did not complete in the expected time, read the remaining 'buff' chunks
     while len(buff) < expectedBuffLen:
         logging.warning("Received LESS data then expected! (" +
                         str(len(buff)) + " out of " + str(expectedBuffLen) + " expected 'buff' bytes.)")
-        tmp = tn.read_until("\n", smallWait)
+        tmp = tn.read_until( b'\n', smallWait) #added b prefix
         if len(tmp) == 0:
             break
         buff += tmp
@@ -195,7 +174,7 @@ elif file_format == "csv":
     # Scan for displayed channels
     chanList = []
     for channel in ["CHAN1", "CHAN2", "CHAN3", "CHAN4", "MATH"]:
-        response = command(tn, ":" + channel + ":DISP?")
+        response = command(tn, channel + ":DISP?")
 
         # If channel is active
         if response == '1\n':
@@ -206,9 +185,9 @@ elif file_format == "csv":
     #                           - will read all the acquired data points when the scope is in STOP mode
     # TODO: Change mode to MAX
     # TODO: Add command line switch for MAX/NORM
-    command(tn, ":WAV:MODE NORM")
-    command(tn, ":WAV:STAR 0")
-    command(tn, ":WAV:MODE NORM")
+    command(tn, "WAV:MODE NORM")
+    command(tn, "WAV:STAR 1")
+    command(tn, "WAV:MODE NORM")
 
     csv_buff = ""
 
@@ -217,24 +196,24 @@ elif file_format == "csv":
         print()
 
         # Set WAVE parameters
-        command(tn, ":WAV:SOUR " + channel)
-        command(tn, ":WAV:FORM ASC")
+        command(tn, "WAV:SOUR " + channel)
+        command(tn, "WAV:FORM ASC")
 
         # MATH channel does not allow START and STOP to be set. They are always 0 and 1200
         if channel != "MATH":
-            command(tn, ":WAV:STAR 1")
-            command(tn, ":WAV:STOP 1200")
+            command(tn, "WAV:STAR 1")
+            command(tn, "WAV:STOP 1200")
 
         buff = ""
         print("Data from channel '" + str(channel) + "', points " + str(1) + "-" + str(1200) + ": Receiving...")
-        buffChunk = command(tn, ":WAV:DATA?")
+        buffChunk = command(tn, "WAV:DATA?")
 
         # Just in case the transfer did not complete in the expected time
         while buffChunk[-1] != "\n":
             logging.warning("The data transfer did not complete in the expected time of " +
                             str(smallWait) + " second(s).")
 
-            tmp = tn.read_until("\n", smallWait)
+            tmp = tn.read_until(b"\n", smallWait)
             if len(tmp) == 0:
                 break
             buffChunk += tmp
@@ -252,29 +231,34 @@ elif file_format == "csv":
         buff_rows = len(buff_list)
 
         # Put read data into csv_buff
-        csv_buff_list = csv_buff.split(os.linesep)
+        #split on the os.linesep that may already be in the csv_buff
+        csv_buff_list = csv_buff.split('\n')
         csv_rows = len(csv_buff_list)
 
         current_row = 0
         if csv_buff == "":
             csv_first_column = True
-            csv_buff = str(channel) + os.linesep
+            #haven't put os.linesep yet on the first line
+            csv_buff = str(channel) + '\n'
         else:
+            
             csv_first_column = False
-            csv_buff = str(csv_buff_list[current_row]) + "," + str(channel) + os.linesep
+            #already split on os.linesep, add it back
+            csv_buff = str(csv_buff_list[current_row]) + "," + str(channel) + '\n'
 
         for point in buff_list:
             current_row += 1
             if csv_first_column:
-                csv_buff += str(point) + os.linesep
+                csv_buff += str(point).strip()  + '\n'
             else:
                 if current_row < csv_rows:
-                    csv_buff += str(csv_buff_list[current_row]) + "," + str(point) + os.linesep
+                    #put back the os.linesep that was used to split()
+                    csv_buff += str(csv_buff_list[current_row]) + "," + str(point).strip() + '\n'
                 else:
-                    csv_buff += "," + str(point) + os.linesep
+                    csv_buff += "," + str(point).strip() + '\n'
 
     # Save data as CSV
-    scr_file = open(filename + "." + file_format, "wb")
+    scr_file = open(filename + "." + file_format, "w")
     scr_file.write(csv_buff)
     scr_file.close()
 

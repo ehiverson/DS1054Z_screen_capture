@@ -23,20 +23,22 @@ def log_running_python_versions():
 
 
 def command(tn, scpi):
+    scpi_bytes = scpi.encode()
     logging.info("SCPI to be sent: " + scpi)
     answer_wait_s = 1
-    response = ""
-    while response != "1\n":
-        tn.write("*OPC?\n")  # previous operation(s) has completed ?
+    #response = ""
+    response = bytearray()
+    while response.decode() != "1\n":
+        tn.write("*OPC?\n".encode())  # previous operation(s) has completed ?
         logging.info("Send SCPI: *OPC? # May I send a command? 1==yes")
-        response = tn.read_until("\n", 1)  # wait max 1s for an answer
-        logging.info("Received response: " + response)
+        response = tn.read_until(b"\n", 1)  # wait max 1s for an answer
+        logging.info("Received response: " + response.decode())
 
-    tn.write(scpi + "\n")
+    tn.write(scpi_bytes + "\n".encode())
     logging.info("Sent SCPI: " + scpi)
-    response = tn.read_until("\n", answer_wait_s)
-    logging.info("Received response: " + response)
-    return response
+    response = tn.read_until(b"\n", answer_wait_s)
+    logging.info("Received response: " + response.decode())
+    return response.decode()
 
 
 # first TMC byte is '#'
