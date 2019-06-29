@@ -40,6 +40,16 @@ def command(tn, scpi):
     logging.info("Received response: " + response.decode())
     return response.decode()
 
+def command2(tn, scpi):
+    scpi_bytes = scpi.encode()
+    logging.info("SCPI to be sent: " + scpi)
+    answer_wait_s = 1
+    response = bytearray()
+    tn.write(scpi_bytes + "\n".encode())
+    logging.info("Sent SCPI: " + scpi)
+    response = tn.read_until(b"\n", answer_wait_s)
+    #logging.info("Received response: " + response.decode())
+    return response
 
 # first TMC byte is '#'
 # second is '0'..'9', and tells how many of the next ASCII chars
