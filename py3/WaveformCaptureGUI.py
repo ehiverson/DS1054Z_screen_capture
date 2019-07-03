@@ -32,9 +32,13 @@ class MyApp(QMainWindow, Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
         self.setGeometry(200, 50, 600, 350)
+        self.CaptureButton.setDisabled(True)
         self.scopeConnected = False
         self.filepath = os.getcwd()
+        self.filename = datetime.now().strftime('-%m_%d_%Y_%H_%M')
+        self.FileNameLineEdit.setText(self.filename)
         self.FilePathLineEdit.setText(self.filepath)
+        self.FullPathAndName = None
         self.FilePathButton.pressed.connect(self.openFileNameDialog)
         self.Connection = Connection()
         self.Connection.ScopeInfo.connect(self.ScopeInfoLineEdit.setText)
@@ -42,10 +46,20 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.ScopeInfoLineEdit.setText('No Scope')
         self.Connection.startConnectThread()
         self.Connection.ConnectionGood.connect(self.setEnabled)
-        self.CaptureButton.pressed.connect(self.Connection.capture)
+        self.CaptureButton.pressed.connect(self.dispatchCapture)
+        self.Connection.Result.connect(self.showResult)
+        self.FileNameLineEdit.editingFinished.connect(self.updateFilename)
+        self.FilePathLineEdit.editingFinished.connect(self.updateFilename)
+        self.updateFilename()
         
+    def updateFilename(self):
+        string = self.FileNameLineEdit.text()
+        path = self.FilePathLineEdit.text()
+        if self.ScreenDataButton.isChecked() or self.FullMemoryButton.isChecked():
+            self.FullPathAndName = os.path.join(path, string + '.csv')
+        else:
+            self.FullPathAndName = os.path.join(path, string + '.png')
         
- 
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
@@ -56,11 +70,36 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.FilePathLineEdit.setText(filepath)
             self.filepath = filepath
             self.FilePathLineEdit.editingFinished.emit()
-            
+    def dispatchCapture(self):
+        self.textEdit.setPlainText('Starting Capture!')
+        if self.ScreenImageRadioButton.isChecked():
+            self.Connection.getImage(self.FullPathAndName)
+        if self.ScreenDataButton.isChecked():
+            self.Connection.screenCapture(self.FullPathAndName)
+        if self.FullMemoryButton.isChecked():
+            self.Connection.fullCapture(self.FullPathAndName)
+        
+    
+    def setEnabled(self, i):
+        '''
+        tekscope if i = 0 so disable full memory option and bmp
+        '''
+        if i == 0:
+            self.ScreenImageRadioButton.setDisabled(True)
+            self.FullMemoryButton.setDisabled(True)
+        if i == 1:
+            self.ScreenImageRadioButton.setEnabled(True)
+            self.FullMemoryButton.setEnabled(True)
+        self.CaptureButton.setEnabled(True)
+    def showResult(self, adict):
+        text = 'wrote a dataframe of size {} with columns {}'.format(adict['size'], adict['columns'])
+        self.textEdit.setPlainText(text)
+
 class Connection(QObject):
     
     ScopeInfo = pyqtSignal(str)
-    ConnectionGood = pyqtSignal(bool)
+    ConnectionGood = pyqtSignal(int)
+    Result = pyqtSignal(dict)
     
     def __init__(self):
         super().__init__()
@@ -89,28 +128,42 @@ class Connection(QObject):
                     inst = rm.open_resource(resource_id, send_end=True )
                     name_str = inst.query('*IDN?').strip()
                     if tekPattern.match(name_str) is not None:
-                        self.scope = tek2024b.tek2024b(inst)            
+                        self.scope = tek2024b.tek2024b(inst)  
+                        self.ConnectionGood.emit(0)
                     if rigolPattern.match(name_str) is not None:
                         self.scope = rigol_ds1054z(inst)
+                        self.ConnectionGood.emit(1)
                 except pyvisa.errors.VisaIOError:
                     pass
                 if self.scope is None:
                     self.ScopeInfo.emit('No Scope')
-                    self.ConnectionGood.emit(False)
+                    self.ConnectionGood.emit(2)
                 else:
                     self.ScopeInfo.emit(name_str[0:20])
                     self.ScopeInfoString = name_str
-                    self.ConnectionGood.emit(True)
                     break
             if name_str is not None:
                 break
             
    
             time.sleep(1)
-    def capture(self):
+    #these functions below should run in separate threads
+    
+    def screenCapture(self, path):
         df = self.scope.capture()
         
         return
+    def getImage(self, path):
+        return
+    def fullCapture(self,path):
+        df = self.scope.fullCapture()
+        df.to_csv(path_or_buf=path)
+        columns = df.columns
+        size = df.size
+        self.Result.emit({'columns':columns, 'size':size})
+        
+        return
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)#sys.argv
     window = MyApp()
