@@ -163,23 +163,8 @@
       <item row="0" column="1">
        <widget class="QLineEdit" name="IPAddressLineEdit"/>
       </item>
-      <item row="5" column="1" colspan="3">
+      <item row="5" column="1" colspan="2">
        <widget class="QLineEdit" name="FilePathLineEdit"/>
-      </item>
-      <item row="6" column="2" colspan="2">
-       <widget class="QTextEdit" name="textEdit">
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="acceptRichText">
-         <bool>false</bool>
-        </property>
-       </widget>
       </item>
       <item row="5" column="0">
        <widget class="QPushButton" name="FilePathButton">
@@ -193,7 +178,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
+      <item row="4" column="2">
        <widget class="QRadioButton" name="FullMemoryButton">
         <property name="font">
          <font>
@@ -205,7 +190,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
+      <item row="3" column="2">
        <widget class="QRadioButton" name="ScreenDataButton">
         <property name="font">
          <font>
@@ -217,7 +202,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
+      <item row="2" column="2">
        <widget class="QRadioButton" name="ScreenImageRadioButton">
         <property name="enabled">
          <bool>true</bool>
@@ -229,6 +214,15 @@
         </property>
         <property name="text">
          <string>Screen Image</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QPlainTextEdit" name="plainTextEdit">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
         </property>
        </widget>
       </item>
