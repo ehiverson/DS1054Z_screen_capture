@@ -4,26 +4,14 @@ Created on Mon Jul  1 07:40:11 2019
 
 @author: Erik
 """
-
-
-
-
-
-
-
 import os
 import sys
-from PySide2.QtWidgets import QApplication, QMainWindow, QFileDialog, qApp, QLabel, QWidget, QMessageBox, QPushButton#, QPixmap, QAction
-from PySide2.QtCore import QObject, Signal, Slot, QFile
-#from ui_mainwindow import Ui_MainWindow 
-from PySide2.QtUiTools import QUiLoader
-from DS1054Z_GUI import Ui_MainWindow
-#from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, qApp, QLabel, QWidget, QMessageBox, QPushButton#, QPixmap, QAction
-#from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot#, QThread, QObject
-#from PyQt5 import uic
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, qApp, QLabel, QWidget, QMessageBox, QPushButton#, QPixmap, QAction
+from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot#, QThread, QObject
+from PyQt5 import uic
 import pyvisa
 from datetime import datetime
-
+import time
 import pandas as pd
 import numpy as np
 from telnetlib import Telnet
@@ -32,24 +20,20 @@ import re
 from rigol_ds1054z import rigol_ds1054z
 import tek2024b
 
-
-
 qtCreatorFile = "DS1054Z_GUI.ui"
-#Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
+Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
-class MyApp(QMainWindow):#, Ui_MainWindow):
+class MyApp(QMainWindow, Ui_MainWindow):
     
-    ConnectSignal = Signal()
+    ConnectSignal = pyqtSignal()
   
     def __init__(self,):
         super(MyApp, self).__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-        #QMainWindow.__init__(self,)
-        #Ui_MainWindow.__init__(self)
-        #self.setupUi(self)
+        QMainWindow.__init__(self,)
+        Ui_MainWindow.__init__(self)
+        self.setupUi(self)
         self.setGeometry(200, 50, 600, 350)
-        self.ui.CaptureButton.setDisabled(True)
+        self.CaptureButton.setDisabled(True)
         self.scopeConnected = False
         self.filepath = os.getcwd()
         self.filename = datetime.now().strftime('-%m_%d_%Y_%H_%M')
@@ -69,15 +53,22 @@ class MyApp(QMainWindow):#, Ui_MainWindow):
         self.FilePathLineEdit.editingFinished.connect(self.updateFilename)
         self.updateFilename()
         
+    @pyqtSlot()
     def updateFilename(self):
+        string = self.FileNameLineEdit.text()
+        dashindex = string.find('-')
+        
+        self.filename = datetime.now().strftime('-%m_%d_%Y_%H_%M')
+        self.FileNameLineEdit.setText(self.filename)
+        
         string = self.FileNameLineEdit.text()
         path = self.FilePathLineEdit.text()
         if self.ScreenDataButton.isChecked() or self.FullMemoryButton.isChecked():
             self.FullPathAndName = os.path.join(path, string + '.csv')
-        else:
+        elif self.ScreenImageRadioButton.isChecked():
             self.FullPathAndName = os.path.join(path, string + '.png')
         
-
+  
     def openFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -88,42 +79,57 @@ class MyApp(QMainWindow):#, Ui_MainWindow):
             self.filepath = filepath
             self.FilePathLineEdit.editingFinished.emit()
     
-    @Slot()
+    @pyqtSlot()
     def dispatchCapture(self):
-        #self.textEdit.setPlainText('Starting Capture{}!'.format(''))
+        
+        self.updateFilename()
+        self.plainTextEdit.setPlainText('Starting Capture!')
+        self.CaptureButton.setDisabled(True)
+        self.CaptureButton.setChecked(True)
         
         if self.ScreenImageRadioButton.isChecked():
-            self.Connection.getImage(self.FullPathAndName)
+            imageThread = Thread(target=self.Connection.getImage, args=(self.FullPathAndName,))
+            imageThread.start()
         if self.ScreenDataButton.isChecked():
-            self.Connection.screenCapture(self.FullPathAndName)
+            screenDataThread = Thread(target=self.Connection.screenCapture, args=(self.FullPathAndName,))
+            screenDataThread.start()
         if self.FullMemoryButton.isChecked():
-            self.Connection.fullCapture(self.FullPathAndName)
-        #else:
-            
-        
-    @Slot(int)
+            fullMemoryThread = Thread(target=self.Connection.fullCapture, args=(self.FullPathAndName,))
+            fullMemoryThread.start()
+        self.plainTextEdit.setPlainText('Working...')
+    
+    @pyqtSlot(int)
     def setEnabled(self, i):
         '''
         tekscope if i = 0 so disable full memory option and bmp
         '''
+        self.ScreenDataButton.setEnabled(True)
         self.ScreenDataButton.setChecked(True)
         if i == 0:
             self.ScreenImageRadioButton.setDisabled(True)
             self.FullMemoryButton.setDisabled(True)
-            
+            self.CaptureButton.setEnabled(True)
         if i == 1:
             self.ScreenImageRadioButton.setEnabled(True)
             self.FullMemoryButton.setEnabled(True)
-        self.CaptureButton.setEnabled(True)
+            self.CaptureButton.setEnabled(True)
+        if i==2:
+            self.CaptureButton.setDisabled(True)
+            
     def showResult(self, adict):
-        text = 'wrote a dataframe of size {} with columns {}'.format(adict['size'], adict['columns'])
-        self.textEdit.setPlainText(text)
+        self.CaptureButton.setEnabled(True)
+        self.CaptureButton.setChecked(False)
+        if adict['code'] == 0:
+            text = 'wrote a dataframe of size {} with columns {}'.format(adict['size'], adict['columns'])
+            self.plainTextEdit.setPlainText(text)
+        if adict['code'] == 1:
+            self.plainTextEdit.setPlainText('saved the image!')
 
 class Connection(QObject):
     
-    ScopeInfo = Signal(str)
-    ConnectionGood = Signal(int)
-    Result = Signal(dict)
+    ScopeInfo = pyqtSignal(str)
+    ConnectionGood = pyqtSignal(int)
+    Result = pyqtSignal(dict)
     
     def __init__(self):
         super().__init__()
@@ -131,23 +137,21 @@ class Connection(QObject):
         self.scope = None
         return 
         
-    @Slot()
+    @pyqtSlot()
     def startConnectThread(self):
         self.ConnectThread = Thread(target=self.makeConnection, name='connect')
         self.ConnectThread.start()
         return
     
     def makeConnection(self):     
-        
         tekPattern = re.compile('TEKTRONIX,TPS 2024B,')
         rigolPattern = re.compile('RIGOL TECHNOLOGIES,DS1104Z')
         #ip = IPAddressLineEdit.text()
         while True:
             rm = pyvisa.ResourceManager()
             tup =  rm.list_resources()
-            
             for resource_id in tup :
-                name_str = 'none'
+                name_str = None
                 try:
                     inst = rm.open_resource(resource_id, send_end=True )
                     name_str = inst.query('*IDN?').strip()
@@ -168,31 +172,31 @@ class Connection(QObject):
                     break
             if name_str is not None:
                 break
-            
-   
             time.sleep(1)
-    #these functions below should run in separate threads
     
     def screenCapture(self, path):
         df = self.scope.capture()
-        df.to_csv(path_or_buf=path)   
-        self.Result.emit({'columns':df.columns, 'size':df.size})
+        df.to_csv(path_or_buf=path,index=False)   
+        self.Result.emit({'code':0,'columns':df.columns, 'size':df.size})
         return
     def getImage(self, path):
+        image = self.scope.getImage()
+        fid = open(path, 'wb')
+        print(path)
+        fid.write(image)
+        fid.close()
+        self.Result.emit({'code':1,'columns':None, 'size':None})
         return
     def fullCapture(self,path):
         df = self.scope.fullCapture()
-        df.to_csv(path_or_buf=path)
+        df.to_csv(path_or_buf=path,index=False)
         columns = df.columns
         size = df.size
-        self.Result.emit({'columns':columns, 'size':size})
-        
+        self.Result.emit({'code':0,'columns':columns, 'size':size})
         return
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MyApp()
-
-    
     window.show()
     sys.exit(app.exec_())
