@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to DS1054Z_Screen_Capture’s documentation! &#8212; DS1054Z_Screen_Capture  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-WaveformCaptureGUI">
+<span id="welcome-to-ds1054z-screen-capture-s-documentation"></span><h1>Welcome to DS1054Z_Screen_Capture’s documentation!<a class="headerlink" href="#module-WaveformCaptureGUI" title="Permalink to this headline">¶</a></h1>
+<p>Created on Mon Jul  1 07:40:11 2019</p>
+<p>&#64;author: Erik</p>
+<dl class="class">
+<dt id="WaveformCaptureGUI.Connection">
+<em class="property">class </em><code class="sig-prename descclassname">WaveformCaptureGUI.</code><code class="sig-name descname">Connection</code><a class="headerlink" href="#WaveformCaptureGUI.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>DocString for class Connection.</p>
+<dl class="simple">
+<dt>Attributes</dt><dd><dl class="simple">
+<dt>ScopeInfo (pyqtSignal): Emits a string to be shown in the MyApp.ScopeInfoLineEdit</dt><dd><p>Emitted each time through the while loop.</p>
+</dd>
+<dt>ConnectionGood (pyqtSignal): Uses a code of type int, and</dt><dd><p>0 means the scope is a tektronix tps2024b.
+1 means the scope is a Rigol DS1054Z on USB.
+2 means there was nothing found.
+3 means the scope is a Rigol DS1054Z on LAN.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="WaveformCaptureGUI.Connection.ConnectionGood">
+<code class="sig-name descname">ConnectionGood</code><a class="headerlink" href="#WaveformCaptureGUI.Connection.ConnectionGood" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="WaveformCaptureGUI.Connection.Result">
+<code class="sig-name descname">Result</code><a class="headerlink" href="#WaveformCaptureGUI.Connection.Result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="WaveformCaptureGUI.Connection.ScopeInfo">
+<code class="sig-name descname">ScopeInfo</code><a class="headerlink" href="#WaveformCaptureGUI.Connection.ScopeInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.Connection.fullCapture">
+<code class="sig-name descname">fullCapture</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.Connection.fullCapture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a the scope screenshot to path. Emits the Result
+signal which the MyApp class uses to display information. The scope instance
+attribute must implement a fullCapture() method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – A full path and filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.Connection.getImage">
+<code class="sig-name descname">getImage</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.Connection.getImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a the scope screenshot to path. Emits the Result
+signal which the MyApp class uses to display information. The scope instance
+attribute must implement a getImage() method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – A full path and filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.Connection.makeConnection">
+<code class="sig-name descname">makeConnection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.Connection.makeConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use pyvisa to create a ResourceManager that can create VisaInstruments.</p>
+<p>The instrument instances are saved as instance attributes. Loops
+indefinitely in its own thread. with 1 second delay until a scope is found,
+and then the ConnectionGood signal is emitted with a code other than 2</p>
+<dl class="simple">
+<dt>See Also</dt><dd><p>ConnectionGood</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.Connection.screenCapture">
+<code class="sig-name descname">screenCapture</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.Connection.screenCapture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a the scope screen waveforms to path as a csv. Emits the Result
+signal which the MyApp class uses to display information. The scope instance
+attribute must implement a capture() method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – A full path and filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.Connection.startConnectThread">
+<code class="sig-name descname">startConnectThread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.Connection.startConnectThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Thread object with a target of makeConnection,
+and starts that Thread.</p>
+<p>Args:
+Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="WaveformCaptureGUI.MyApp">
+<em class="property">class </em><code class="sig-prename descclassname">WaveformCaptureGUI.</code><code class="sig-name descname">MyApp</code><a class="headerlink" href="#WaveformCaptureGUI.MyApp" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main window and the main class of the WaveformCaptureGUI.</p>
+<dl class="method">
+<dt id="WaveformCaptureGUI.MyApp.dispatchCapture">
+<code class="sig-name descname">dispatchCapture</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.MyApp.dispatchCapture" title="Permalink to this definition">¶</a></dt>
+<dd><p>The capture button was pressed, and this function is called.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.MyApp.openFileNameDialog">
+<code class="sig-name descname">openFileNameDialog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.MyApp.openFileNameDialog" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.MyApp.setEnabled">
+<code class="sig-name descname">setEnabled</code><span class="sig-paren">(</span><em class="sig-param">i</em><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.MyApp.setEnabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables the appropriate user input options in the GUI.</p>
+<p>Called automatically when ConnectionGood signal is emitted from the
+Connection object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – If 0, the scope discovered is a Tek TPS2024B , which
+only implements the screen waveform data transfer. If 1,
+the scope is rigol and does all 3 radio button functions. If 2,
+there is no scope, and the capture button should be disabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.MyApp.showResult">
+<code class="sig-name descname">showResult</code><span class="sig-paren">(</span><em class="sig-param">adict</em><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.MyApp.showResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="WaveformCaptureGUI.MyApp.updateFilename">
+<code class="sig-name descname">updateFilename</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WaveformCaptureGUI.MyApp.updateFilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">DS1054Z_Screen_Capture</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Erik Iverson.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

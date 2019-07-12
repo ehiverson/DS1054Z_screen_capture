@@ -43,7 +43,7 @@
     </item>
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="6" column="1">
+      <item row="5" column="1">
        <widget class="QPushButton" name="CaptureButton">
         <property name="enabled">
          <bool>true</bool>
@@ -76,7 +76,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="ScopeLabel">
         <property name="font">
          <font>
@@ -91,58 +91,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="IPAddressLabel">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>IP Address</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="PingButton">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Ping Scope</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="ScopeInfoLineEdit"/>
       </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="lineEdit_3"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="COMPortLabel">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>COM Port</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="lineEdit_4"/>
-      </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label">
         <property name="font">
          <font>
@@ -157,16 +109,13 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QLineEdit" name="FileNameLineEdit"/>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="IPAddressLineEdit"/>
-      </item>
-      <item row="5" column="1" colspan="2">
+      <item row="4" column="1" colspan="2">
        <widget class="QLineEdit" name="FilePathLineEdit"/>
       </item>
-      <item row="5" column="0">
+      <item row="4" column="0">
        <widget class="QPushButton" name="FilePathButton">
         <property name="font">
          <font>
@@ -178,7 +127,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="2">
+      <item row="3" column="2">
        <widget class="QRadioButton" name="FullMemoryButton">
         <property name="font">
          <font>
@@ -190,7 +139,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
+      <item row="2" column="2">
        <widget class="QRadioButton" name="ScreenDataButton">
         <property name="font">
          <font>
@@ -202,7 +151,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
+      <item row="1" column="2">
        <widget class="QRadioButton" name="ScreenImageRadioButton">
         <property name="enabled">
          <bool>true</bool>
@@ -217,7 +166,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="2">
+      <item row="5" column="2">
        <widget class="QPlainTextEdit" name="plainTextEdit">
         <property name="font">
          <font>
@@ -225,6 +174,24 @@
          </font>
         </property>
        </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="IPAddressLabel">
+        <property name="font">
+         <font>
+          <pointsize>14</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>IP Address</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="IPAddressLineEdit"/>
       </item>
      </layout>
     </item>
