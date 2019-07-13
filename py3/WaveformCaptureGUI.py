@@ -19,10 +19,10 @@ from telnetlib import Telnet
 from threading import Thread
 import re
 from rigol_ds1054z import rigol_ds1054z
-from Rigol_functions import *
 from math import ceil
 import tek2024b
 from ipaddress import ip_address
+from RigolLAN import RigolLAN
 
 qtCreatorFile = "C:\\Users\\Erik\\git\\DS1054Z_screen_capture\\py3\\DS1054Z_GUI.ui"
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -31,7 +31,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
     """ The main window and the main class of the WaveformCaptureGUI. 
     
     """
-    sendIP = pyqtSignal(str)
+    sendIPSignal = pyqtSignal(str)
     
     def __init__(self,):
         """
@@ -61,15 +61,18 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.FileNameLineEdit.editingFinished.connect(self.updateFilename)
         self.FilePathLineEdit.editingFinished.connect(self.updateFilename)
         
-        self.IPAddressLineEdit.setValidator(IPValidator())
-        self.IPAddress.setText('000.000.000.000')
+        #self.IPAddressLineEdit.setValidator(IPValidator())
+        self.IPAddressLineEdit.setText('000.000.000.000')
         self.IPAddressLineEdit.inputRejected.connect(self.wrongIPwarning)
-        self.IPAddressLineEdit.editingFinished.connect(self.sendIP.emit(self.IPAddressLineEdit.text()))
+        self.IPAddressLineEdit.editingFinished.connect(self.sendIP)
+        self.sendIPSignal.connect(self.Connection.takeIP)
         #self.IPAddressLineEdit.textChanged.connect(self.Connection.takeIP)
         self.updateFilename()
     
     @pyqtSlot()
-    def check
+    def sendIP(self):
+        if self.IPAddressLineEdit.text() != '000.000.000.000':
+            self.sendIPSignal.emit(self.IPAddressLineEdit.text())
     
     @pyqtSlot()
     def wrongIPwarning(self):
@@ -159,6 +162,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.plainTextEdit.setPlainText(text)
         if adict['code'] == 1:
             self.plainTextEdit.setPlainText('saved the image!')
+        #if adict['code'] == 3: 
+        #    self.plainTextEdit.setPlainText('')
+        #if adict['code'] == 4:
+        #    self.plainTextEdit.setPlainText('LAN Timeout Error!')
+        #if adict['code'] == 5:
+        #    self.plainTextEdit.setPlainText('Scope Refused Connection')
 
 class Connection(QObject):
     """DocString for class Connection.
@@ -210,7 +219,7 @@ class Connection(QObject):
         """
         tekPattern = re.compile('TEKTRONIX,TPS 2024B,')
         rigolPattern = re.compile('RIGOL TECHNOLOGIES,DS1104Z')
-        #ip = IPAddressLineEdit.text()
+        port=5555
         while True:
             rm = pyvisa.ResourceManager()
             tup =  rm.list_resources()
@@ -227,16 +236,19 @@ class Connection(QObject):
                         self.ConnectionGood.emit(1)
                 except pyvisa.errors.VisaIOError:
                     pass
-                
-                try:                
-                    port=5555
-                    tn = Telnet(self.ip, port,timeout=2)
-                    self.ConnectionGood.emit(3)
-                except TimeoutError:
-                    self.ConnectionGood.emit(4)
-                except ConnectionRefusedError:
-                    self.ConnectionGood.emit(5)
-                
+                if self.ip is not None:
+                    try:                
+                        tn = Telnet(self.ip, port,timeout=2)
+                        self.scope = RigolLAN(tn)
+                        name_str = self.scope.command('*IDN?').strip()
+                        self.ConnectionGood.emit(1)
+                    
+                    except TimeoutError:
+                        self.ScopeInfo.emit('timeout')
+                        time.sleep(.5)
+                    except ConnectionRefusedError:
+                        self.ScopeInfo.emit('connection refused')
+                        time.sleep(.5)
                 if self.scope is None:
                     self.ScopeInfo.emit('No Scope')
                     self.ConnectionGood.emit(2)

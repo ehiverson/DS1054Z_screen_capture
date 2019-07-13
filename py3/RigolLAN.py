@@ -4,6 +4,16 @@ Created on Thu Jul 11 07:05:23 2019
 
 @author: Erik
 """
+import time
+import io
+import sys
+import os
+import platform
+import logging
+import pandas as pd
+from math import ceil 
+import numpy as np
+from datetime import datetime
 
 class RigolLAN():
     
@@ -14,31 +24,31 @@ class RigolLAN():
     def command(self,scpi):
         tn = self.tn
         scpi_bytes = scpi.encode()
-        logging.info("SCPI to be sent: " + scpi)
+        #logging.info("SCPI to be sent: " + scpi)
         answer_wait_s = 1
         #response = ""
         response = bytearray()
         while response.decode() != "1\n":
             tn.write("*OPC?\n".encode())  # previous operation(s) has completed ?
-            logging.info("Send SCPI: *OPC? # May I send a command? 1==yes")
+            #logging.info("Send SCPI: *OPC? # May I send a command? 1==yes")
             response = tn.read_until(b"\n", 1)  # wait max 1s for an answer
-            logging.info("Received response: " + response.decode())
+            #logging.info("Received response: " + response.decode())
     
         tn.write(scpi_bytes + "\n".encode())
-        logging.info("Sent SCPI: " + scpi)
+        #logging.info("Sent SCPI: " + scpi)
         response = tn.read_until(b"\n", answer_wait_s)
-        logging.info("Received response: " + response.decode())
+        #logging.info("Received response: " + response.decode())
         return response.decode()
     
     
     def command2(self,scpi):
         tn=self.tn
         scpi_bytes = scpi.encode()
-        logging.info("SCPI to be sent: " + scpi)
+        #logging.info("SCPI to be sent: " + scpi)
         answer_wait_s = 1
         response = bytearray()
         tn.write(scpi_bytes + "\n".encode())
-        logging.info("Sent SCPI: " + scpi)
+        #logging.info("Sent SCPI: " + scpi)
         response = tn.read_until(b"\n", answer_wait_s)
         #logging.info("Received response: " + response.decode())
         return response
@@ -115,7 +125,7 @@ class RigolLAN():
             # Append data chunks
             # Strip TMC Blockheader and terminator bytes
             #don't bother decoding the WHOLE chunk
-                chunk = chunk[tmc_header_bytes(chunk[0:30].decode()):-1]
+                chunk = chunk[self.tmc_header_bytes(chunk[0:30].decode()):-1]
                 scaled_data_y = [(int(y)-y_origin-y_ref)*y_increment for y in chunk]   
                 ser = ser.append(pd.Series(scaled_data_y) )
             # Process data
